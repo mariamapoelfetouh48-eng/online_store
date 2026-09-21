@@ -3,9 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../contexts/AuthContext";
 
-function Login() {
+function Register() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { setUser } = useContext(AuthContext);
@@ -16,14 +18,27 @@ function Login() {
     setError("");
     setLoading(true);
 
-    if (!email || !password) {
+    if (!username || !email || !password || !confirmPassword) {
       setError("Please fill in all fields");
       setLoading(false);
       return;
     }
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await api.post("/auth/login", {
+      const response = await api.post("/auth/register", {
+        username: username.trim(),
         email: email.trim(),
         password,
       });
@@ -37,7 +52,7 @@ function Login() {
       setUser(user);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -48,7 +63,7 @@ function Login() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
         <div>
           <h1 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Sign in to your account
+            Create an account
           </h1>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -58,6 +73,21 @@ function Login() {
             </div>
           )}
           <div className="rounded-md shadow-sm space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email address
@@ -83,9 +113,24 @@ function Login() {
                 type="password"
                 required
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Password"
+                placeholder="Password (min 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
           </div>
@@ -95,13 +140,13 @@ function Login() {
             disabled={loading}
             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Creating account..." : "Create account"}
           </button>
 
           <div className="text-sm text-center">
-            Don't have an account?{" "}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign up
+            Already have an account?{" "}
+            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              Sign in
             </Link>
           </div>
         </form>
@@ -110,4 +155,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;
